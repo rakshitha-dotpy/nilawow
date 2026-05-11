@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* NILA WOW — black & white minimal luxury design system.
+   All colors MUST be HSL. */
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 67%;
+
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 100% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --warning: 24 100% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 0 0% 14%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 100%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 67%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 14%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .font-brand {
+    font-family: 'Cormorant Garamond', serif;
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer utilities {
+  .text-warning { color: hsl(var(--warning)); }
+  .bg-warning { background-color: hsl(var(--warning)); }
+  .text-success { color: hsl(var(--success)); }
+  .bg-success { background-color: hsl(var(--success)); }
+
+  .hairline {
+    border-color: hsl(0 0% 100% / 0.08);
+  }
+
+  .glass {
+    background: hsl(0 0% 4% / 0.7);
+    backdrop-filter: blur(12px);
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  .slide-up {
+    animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .nw-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-inline: 24px;
+  }
+
+  .nw-card {
+    background: hsl(0 0% 4% / 0.7);
+    border: 1px solid hsl(0 0% 100% / 0.09);
+    box-shadow:
+      0 24px 60px hsl(0 0% 0% / 0.55),
+      0 0 0 1px hsl(0 0% 100% / 0.05) inset;
+    backdrop-filter: blur(14px);
+    border-radius: 24px;
+  }
+
+  .nw-glow {
+    box-shadow:
+      0 18px 50px hsl(0 0% 0% / 0.6),
+      0 0 0 1px hsl(0 0% 100% / 0.06) inset,
+      0 0 30px hsl(0 0% 100% / 0.06);
+  }
+
+  .nw-subtle-sep {
+    border-color: hsl(0 0% 100% / 0.08);
+  }
+
+  .nw-splash-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(1200px 700px at 50% 35%, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.02) 38%, rgba(0, 0, 0, 0) 70%),
+      radial-gradient(900px 520px at 70% 15%, rgba(255, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 60%),
+      radial-gradient(900px 520px at 25% 85%, rgba(255, 255, 255, 0.04) 0%, rgba(0, 0, 0, 0) 65%),
+      linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(0, 0, 0, 1) 55%, rgba(5, 5, 5, 1) 100%);
+  }
+
+  .nw-splash-noise {
+    position: absolute;
+    inset: -40%;
+    opacity: 0.08;
+    background-image:
+      repeating-radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.18) 0 1px, rgba(255, 255, 255, 0) 1px 3px),
+      repeating-radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.12) 0 1px, rgba(255, 255, 255, 0) 1px 4px);
+    mix-blend-mode: overlay;
+    filter: blur(0.6px);
+    transform: rotate(-8deg);
+    animation: nwNoiseDrift 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nwNoiseDrift {
+  0% { transform: translate3d(-2%, -1%, 0) rotate(-8deg); }
+  50% { transform: translate3d(2%, 1%, 0) rotate(-8deg); }
+  100% { transform: translate3d(-2%, -1%, 0) rotate(-8deg); }
+}
