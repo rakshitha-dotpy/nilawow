@@ -138,9 +138,9 @@ const Dashboard = () => {
 
       {/* 2) Small elegant stat cards row */}
       <div className="grid grid-cols-3 gap-3 mb-5">
-        <Stat label="Customers" value={loading ? 0 : stats.totalCustomers} />
-        <Stat label="Records" value={loading ? 0 : stats.totalRecords} />
-        <Stat label="Today" value={loading ? 0 : stats.todayRecords} />
+        <Stat label="Customers" value={stats.totalCustomers} loading={loading} />
+        <Stat label="Records" value={stats.totalRecords} loading={loading} />
+        <Stat label="Today" value={stats.todayRecords} loading={loading} />
       </div>
 
       {/* 3) Main primary action section (compact centered CTA card) */}
@@ -195,7 +195,20 @@ const Dashboard = () => {
           </button>
         </div>
         <div className="nw-card nw-glow overflow-hidden">
-          {recent.length === 0 ? (
+          {loading ? (
+            <div className="px-5 py-4 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start justify-between gap-4 animate-pulse">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-1/3 bg-white/10 rounded" />
+                    <div className="h-3 w-1/2 bg-white/10 rounded" />
+                    <div className="h-3 w-1/4 bg-white/10 rounded mt-2" />
+                  </div>
+                  <div className="h-4 w-16 bg-white/10 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : recent.length === 0 ? (
             <div className="px-5 py-5 text-sm text-muted-foreground">
               No recent records yet.
             </div>
@@ -279,13 +292,17 @@ const AnimatedNumber = ({ value }: { value: number }) => {
   );
 };
 
-const Stat = ({ label, value }: { label: string; value: number }) => (
-  <div className="nw-card nw-glow px-4 py-3.5">
+const Stat = ({ label, value, loading }: { label: string; value: number; loading?: boolean }) => (
+  <div className="nw-card nw-glow px-4 py-3.5 h-full flex flex-col justify-center min-h-[92px]">
     <div className="text-[10px] uppercase tracking-[0.34em] text-muted-foreground leading-none">
       {label}
     </div>
     <div className="mt-2 text-2xl md:text-3xl font-semibold tracking-tight text-white leading-none">
-      <AnimatedNumber value={value} />
+      {loading ? (
+        <div className="h-7 md:h-8 w-12 md:w-16 bg-white/10 animate-pulse rounded-md mt-1" />
+      ) : (
+        <AnimatedNumber value={value} />
+      )}
     </div>
   </div>
 );
