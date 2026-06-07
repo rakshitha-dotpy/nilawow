@@ -61,7 +61,7 @@ const Records = () => {
   }, [load, version]);
 
   const { filtered, total } = useMemo(() => {
-    const all = rows.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const all = rows.slice().sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate));
     const term = q.trim().toLowerCase();
     const filteredRows = term
       ? all.filter(
@@ -137,7 +137,7 @@ const Records = () => {
           </div>
           <ul className="divide-y divide-white/5">
             {filtered.map((r) => {
-              const d = new Date(r.createdAt);
+              const d = new Date(r.purchaseDate);
               const date = d.toLocaleDateString();
               const time = d.toLocaleTimeString([], {
                 hour: "2-digit",

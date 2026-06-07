@@ -170,7 +170,7 @@ const DailySummary = () => {
 
       // --- Table: all body cells are plain strings; no locale grouping in amounts ---
       const body: string[][] = records.map((r) => [
-        format(new Date(r.createdAt), "HH:mm"),
+        format(new Date(r.purchaseDate), "HH:mm"),
         String(r.customer?.name ?? r.customerName ?? "—"),
         String(r.note || "—").replace(/\s+/g, " ").trim(),
         r.amount != null ? formatInrPlain(r.amount) : "—",
@@ -356,7 +356,7 @@ const DailySummary = () => {
                       {r.customer?.name ?? r.customerName ?? "Unknown"}
                     </div>
                     <div className="mt-1 text-xs text-muted-foreground tabular-nums">
-                      {format(new Date(r.createdAt), "HH:mm")}
+                      {format(new Date(r.purchaseDate), "HH:mm")}
                     </div>
                   </div>
                   {r.amount != null && (

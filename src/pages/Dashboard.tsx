@@ -47,7 +47,7 @@ const Dashboard = () => {
       );
       const top = recRows
         .slice()
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate))
         .slice(0, 6)
         .map((r) => ({
           ...r,
@@ -230,7 +230,7 @@ const Dashboard = () => {
                         </div>
                         <div className="mt-2 inline-flex items-center gap-2 text-[11px] text-muted-foreground">
                           <Clock3 className="w-3.5 h-3.5" />
-                          {new Date(r.createdAt).toLocaleString()}
+                           {new Date(r.purchaseDate).toLocaleString()}
                         </div>
                       </div>
                       <div className="shrink-0 text-sm font-semibold text-white/90">

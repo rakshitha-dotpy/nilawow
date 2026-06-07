@@ -6,7 +6,11 @@ import {
   Check,
   ChevronDown,
   Sparkles,
+  Calendar as LucideCalendar,
+  X,
 } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { motion, AnimatePresence } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
@@ -51,6 +55,7 @@ const AddRecord = () => {
   const [newPhone, setNewPhone] = useState("");
   const [note, setNote] = useState("");
   const [amount, setAmount] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState<Date | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<Customer[]>([]);
@@ -174,6 +179,7 @@ const AddRecord = () => {
         customerName: customer.name,
         note: note.trim(),
         amount: amt,
+        purchaseDate: purchaseDate ? purchaseDate.toISOString() : undefined,
       });
       pushRecentService(note.trim().split(" · ")[0] ?? note.trim());
       setRecentList(readRecentServices());
@@ -433,6 +439,51 @@ const AddRecord = () => {
                 inputMode="decimal"
                 className="mt-2 h-12 bg-black/45 border-white/10 rounded-2xl focus-visible:ring-2 focus-visible:ring-white/35"
               />
+            </section>
+
+            {/* Purchase Date */}
+            <section>
+              <Label className="text-[10px] uppercase tracking-[0.34em] text-muted-foreground">
+                Purchase Date (optional)
+              </Label>
+              <div className="mt-2 flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-12 flex-1 justify-start gap-3 rounded-2xl border-white/10 bg-black/45 hover:bg-white/[0.06] hover:text-white text-left font-normal text-white/90"
+                    >
+                      <LucideCalendar className="w-4 h-4 text-muted-foreground" />
+                      {purchaseDate ? (
+                        format(purchaseDate, "PPP")
+                      ) : (
+                        <span className="text-muted-foreground/60">Current date & time (default)</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 border-white/10 bg-[#080808]/95 backdrop-blur-xl rounded-2xl" align="start">
+                    <CalendarPicker
+                      mode="single"
+                      selected={purchaseDate}
+                      onSelect={setPurchaseDate}
+                      initialFocus
+                      className="[color-scheme:dark]"
+                    />
+                  </PopoverContent>
+                </Popover>
+                {purchaseDate && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setPurchaseDate(undefined)}
+                    className="h-12 w-12 rounded-2xl border-white/10 bg-black/45 text-muted-foreground hover:text-white hover:bg-white/[0.06] flex items-center justify-center p-0"
+                    title="Clear date"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
             </section>
 
             <Button

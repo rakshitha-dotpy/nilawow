@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { deleteRecord, getRecordsByCustomer, type PurchaseRecord } from "@/services/records";
 import { toast } from "sonner";
-import { getCustomerById, type Customer } from "@/services/customers";
+import { getCustomerById, type Customer, deleteCustomer } from "@/services/customers";
 
 const CustomerProfile = () => {
   const { id = "" } = useParams();
@@ -28,6 +28,8 @@ const CustomerProfile = () => {
   const [loadingCustomer, setLoadingCustomer] = useState(true);
   const [loadingRecords, setLoadingRecords] = useState(true);
   const [recordsError, setRecordsError] = useState<string | null>(null);
+  const [showDeleteCustomerDialog, setShowDeleteCustomerDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,24 +111,50 @@ const CustomerProfile = () => {
     }
   };
 
+  const handleDeleteCustomer = async () => {
+    if (!customer?.id) return;
+    setIsDeleting(true);
+    try {
+      await deleteCustomer(customer.id);
+      toast.success("Customer deleted successfully");
+      navigate("/customers");
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("[customer-profile] deleteCustomer failed", e);
+      toast.error("Failed to delete customer");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteCustomerDialog(false);
+    }
+  };
+
   const total = records.reduce((s, r) => s + (r.amount ?? 0), 0);
 
   return (
     <AppShell title={customer.name} back>
-      <div className="mb-6">
-        {customer.phone && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Phone className="w-3.5 h-3.5" /> {customer.phone}
-          </div>
-        )}
-        <div className="mt-4 flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground">
-          <span>
-            {loadingRecords ? "…" : `${records.length} records`}
-          </span>
-          {!loadingRecords && total > 0 && (
-            <span>· Total ₹{total.toLocaleString()}</span>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          {customer.phone && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Phone className="w-3.5 h-3.5" /> {customer.phone}
+            </div>
           )}
+          <div className="mt-4 flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground">
+            <span>
+              {loadingRecords ? "…" : `${records.length} records`}
+            </span>
+            {!loadingRecords && total > 0 && (
+              <span>· Total ₹{total.toLocaleString()}</span>
+            )}
+          </div>
         </div>
+        <button
+          onClick={() => setShowDeleteCustomerDialog(true)}
+          className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+          title="Delete Customer"
+        >
+          <Trash2 className="w-4.5 h-4.5" />
+        </button>
       </div>
 
       <Button
@@ -163,7 +191,7 @@ const CustomerProfile = () => {
                   {r.note}
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{format(new Date(r.createdAt), "dd MMM yyyy · p")}</span>
+                  <span>{format(new Date(r.purchaseDate), "dd MMM yyyy · p")}</span>
                   {r.amount != null && (
                     <span className="text-foreground font-medium">
                       ₹{r.amount.toLocaleString()}
@@ -187,24 +215,64 @@ const CustomerProfile = () => {
         open={!!pendingDelete}
         onOpenChange={(o) => !o && setPendingDelete(null)}
       >
-        <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-2xl">
-              Delete record?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-0">
+          <div className="p-6">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-display text-2xl text-white">
+                Delete record?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground/80 mt-2">
+                This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-8 flex gap-3">
+              <AlertDialogCancel className="flex-1 bg-white/[0.05] border-white/10 rounded-xl hover:bg-white/10 transition-colors">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="flex-1 bg-destructive/80 hover:bg-destructive rounded-xl transition-colors"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showDeleteCustomerDialog}
+        onOpenChange={setShowDeleteCustomerDialog}
+      >
+        <AlertDialogContent className="bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-2xl overflow-hidden p-0">
+          <div className="p-8">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-display text-2xl text-white">
+                Delete Customer?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground/80 mt-3 leading-relaxed">
+                This will permanently delete <span className="text-white font-medium">{customer.name}</span> and all their associated records. This action cannot be reversed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-10 flex flex-col sm:flex-row gap-3">
+              <AlertDialogCancel 
+                disabled={isDeleting}
+                className="w-full sm:flex-1 bg-white/[0.05] border-white/10 h-12 rounded-2xl hover:bg-white/10 transition-colors text-white/70"
+              >
+                Keep Customer
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteCustomer();
+                }}
+                disabled={isDeleting}
+                className="w-full sm:flex-1 bg-destructive/10 border border-destructive/20 text-destructive hover:bg-destructive hover:text-white h-12 rounded-2xl transition-all font-semibold"
+              >
+                {isDeleting ? "Deleting..." : "Delete Permanently"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </AppShell>

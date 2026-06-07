@@ -11,6 +11,7 @@ export type PurchaseRecord = {
   note: string;
   amount: number | null;
   createdAt: string;
+  purchaseDate: string;
 };
 
 type RecordRow = {
@@ -20,6 +21,7 @@ type RecordRow = {
   note: string;
   amount: string | number | null;
   created_at: string;
+  purchase_date?: string | null;
 };
 
 function mapRow(row: RecordRow): PurchaseRecord {
@@ -32,6 +34,7 @@ function mapRow(row: RecordRow): PurchaseRecord {
     note: row.note ?? "",
     amount: n == null || Number.isNaN(n) ? null : n,
     createdAt: row.created_at,
+    purchaseDate: row.purchase_date || row.created_at,
   };
 }
 
@@ -57,11 +60,12 @@ export async function getRecords(): Promise<PurchaseRecord[]> {
   const { data, error } = await supabase
     .from("records")
     .select("*")
-    .order("created_at", { ascending: false })
     .returns<RecordRow[]>();
 
   if (error) throw error;
-  return (data ?? []).map(mapRow);
+  return (data ?? [])
+    .map(mapRow)
+    .sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate));
 }
 
 export async function getRecordsByCustomer(
@@ -71,11 +75,12 @@ export async function getRecordsByCustomer(
     .from("records")
     .select("*")
     .eq("customer_id", customerId)
-    .order("created_at", { ascending: false })
     .returns<RecordRow[]>();
 
   if (error) throw error;
-  return (data ?? []).map(mapRow);
+  return (data ?? [])
+    .map(mapRow)
+    .sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate));
 }
 
 /** Local calendar day `YYYY-MM-DD` — matches Daily Summary filtering. */
@@ -87,13 +92,15 @@ export async function getRecordsByDate(ymd: string): Promise<PurchaseRecord[]> {
   const { data, error } = await supabase
     .from("records")
     .select("*")
-    .gte("created_at", start.toISOString())
-    .lt("created_at", end.toISOString())
-    .order("created_at", { ascending: true })
+    .or(
+      `and(purchase_date.gte.${start.toISOString()},purchase_date.lt.${end.toISOString()}),and(purchase_date.is.null,created_at.gte.${start.toISOString()},created_at.lt.${end.toISOString()})`
+    )
     .returns<RecordRow[]>();
 
   if (error) throw error;
-  return (data ?? []).map(mapRow);
+  return (data ?? [])
+    .map(mapRow)
+    .sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate));
 }
 
 export type AddRecordInput = {
@@ -101,6 +108,7 @@ export type AddRecordInput = {
   customerName?: string | null;
   note: string;
   amount?: number | null;
+  purchaseDate?: string | null;
 };
 
 export async function addRecord(input: AddRecordInput): Promise<PurchaseRecord> {
@@ -120,6 +128,7 @@ export async function addRecord(input: AddRecordInput): Promise<PurchaseRecord> 
         customer_name: customerName,
         note: input.note.trim(),
         amount,
+        ...(input.purchaseDate ? { purchase_date: input.purchaseDate } : {}),
       },
     ])
     .select("*")
@@ -143,8 +152,9 @@ export async function countRecordsForLocalDay(ymd: string): Promise<number> {
   const { count, error } = await supabase
     .from("records")
     .select("*", { count: "exact", head: true })
-    .gte("created_at", start.toISOString())
-    .lt("created_at", end.toISOString());
+    .or(
+      `and(purchase_date.gte.${start.toISOString()},purchase_date.lt.${end.toISOString()}),and(purchase_date.is.null,created_at.gte.${start.toISOString()},created_at.lt.${end.toISOString()})`
+    );
 
   if (error) throw error;
   return count ?? 0;
