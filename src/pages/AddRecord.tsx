@@ -6,11 +6,8 @@ import {
   Check,
   ChevronDown,
   Sparkles,
-  Calendar as LucideCalendar,
-  X,
 } from "lucide-react";
 import { format } from "date-fns";
-import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { motion, AnimatePresence } from "framer-motion";
 import AppShell from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
@@ -22,6 +19,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Command,
   CommandEmpty,
@@ -55,8 +59,67 @@ const AddRecord = () => {
   const [newPhone, setNewPhone] = useState("");
   const [note, setNote] = useState("");
   const [amount, setAmount] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState<Date | undefined>(undefined);
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("");
+  const [selectedDay, setSelectedDay] = useState<string>("");
   const [saving, setSaving] = useState(false);
+
+  const years = useMemo(() => {
+    const current = new Date().getFullYear();
+    const list = [];
+    for (let y = current + 1; y >= 2020; y--) {
+      list.push(String(y));
+    }
+    return list;
+  }, []);
+
+  const months = useMemo(
+    () => [
+      { value: "1", label: "January" },
+      { value: "2", label: "February" },
+      { value: "3", label: "March" },
+      { value: "4", label: "April" },
+      { value: "5", label: "May" },
+      { value: "6", label: "June" },
+      { value: "7", label: "July" },
+      { value: "8", label: "August" },
+      { value: "9", label: "September" },
+      { value: "10", label: "October" },
+      { value: "11", label: "November" },
+      { value: "12", label: "December" },
+    ],
+    [],
+  );
+
+  const daysInMonth = useMemo(() => {
+    if (!selectedYear || !selectedMonth) return 31;
+    const y = parseInt(selectedYear, 10);
+    const m = parseInt(selectedMonth, 10);
+    return new Date(y, m, 0).getDate();
+  }, [selectedYear, selectedMonth]);
+
+  const days = useMemo(() => {
+    const list = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      list.push(String(d));
+    }
+    return list;
+  }, [daysInMonth]);
+
+  useEffect(() => {
+    if (selectedDay) {
+      const d = parseInt(selectedDay, 10);
+      if (d > daysInMonth) {
+        setSelectedDay(String(daysInMonth));
+      }
+    }
+  }, [daysInMonth, selectedDay]);
+
+  const handleClearDate = () => {
+    setSelectedYear("");
+    setSelectedMonth("");
+    setSelectedDay("");
+  };
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<Customer[]>([]);
   const [catalogOpen, setCatalogOpen] = useState(false);
@@ -167,6 +230,12 @@ const AddRecord = () => {
       return toast.error("Customer is missing an id — try selecting again");
     if (!note.trim()) return toast.error("Service / note is required");
 
+    const hasAnyDatePart = selectedYear || selectedMonth || selectedDay;
+    const hasAllDateParts = selectedYear && selectedMonth && selectedDay;
+    if (hasAnyDatePart && !hasAllDateParts) {
+      return toast.error("Please complete the Purchase Date selection (Year, Month, and Day) or clear it.");
+    }
+
     setSaving(true);
     try {
       const amt = amount.trim() ? Number(amount) : undefined;
@@ -174,12 +243,17 @@ const AddRecord = () => {
         toast.error("Invalid amount");
         return;
       }
+      
+      const purchaseDateISO = hasAllDateParts
+        ? new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, parseInt(selectedDay)).toISOString()
+        : undefined;
+
       await addRecord({
         customerId: customer.id,
         customerName: customer.name,
         note: note.trim(),
         amount: amt,
-        purchaseDate: purchaseDate ? purchaseDate.toISOString() : undefined,
+        purchaseDate: purchaseDateISO,
       });
       pushRecentService(note.trim().split(" · ")[0] ?? note.trim());
       setRecentList(readRecentServices());
@@ -443,45 +517,70 @@ const AddRecord = () => {
 
             {/* Purchase Date */}
             <section>
-              <Label className="text-[10px] uppercase tracking-[0.34em] text-muted-foreground">
-                Purchase Date (optional)
-              </Label>
-              <div className="mt-2 flex gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-12 flex-1 justify-start gap-3 rounded-2xl border-white/10 bg-black/45 hover:bg-white/[0.06] hover:text-white text-left font-normal text-white/90"
-                    >
-                      <LucideCalendar className="w-4 h-4 text-muted-foreground" />
-                      {purchaseDate ? (
-                        format(purchaseDate, "PPP")
-                      ) : (
-                        <span className="text-muted-foreground/60">Current date & time (default)</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 border-white/10 bg-[#080808]/95 backdrop-blur-xl rounded-2xl" align="start">
-                    <CalendarPicker
-                      mode="single"
-                      selected={purchaseDate}
-                      onSelect={setPurchaseDate}
-                      initialFocus
-                      className="[color-scheme:dark]"
-                    />
-                  </PopoverContent>
-                </Popover>
-                {purchaseDate && (
-                  <Button
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-[10px] uppercase tracking-[0.34em] text-muted-foreground">
+                  Purchase Date (optional)
+                </Label>
+                {(selectedYear || selectedMonth || selectedDay) && (
+                  <button
                     type="button"
-                    variant="outline"
-                    onClick={() => setPurchaseDate(undefined)}
-                    className="h-12 w-12 rounded-2xl border-white/10 bg-black/45 text-muted-foreground hover:text-white hover:bg-white/[0.06] flex items-center justify-center p-0"
-                    title="Clear date"
+                    onClick={handleClearDate}
+                    className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-white transition-colors"
                   >
-                    <X className="w-4 h-4" />
-                  </Button>
+                    Clear selection
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {/* Year Select */}
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="h-12 bg-black/45 border-white/10 rounded-2xl text-white/90 focus:ring-white/35">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent className="border-white/10 bg-[#080808]/95 backdrop-blur-xl rounded-2xl max-h-60 overflow-y-auto">
+                    {years.map((y) => (
+                      <SelectItem key={y} value={y} className="focus:bg-white/[0.08] focus:text-white rounded-lg">
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Month Select */}
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="h-12 bg-black/45 border-white/10 rounded-2xl text-white/90 focus:ring-white/35">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent className="border-white/10 bg-[#080808]/95 backdrop-blur-xl rounded-2xl max-h-60 overflow-y-auto">
+                    {months.map((m) => (
+                      <SelectItem key={m.value} value={m.value} className="focus:bg-white/[0.08] focus:text-white rounded-lg">
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Day Select */}
+                <Select value={selectedDay} onValueChange={setSelectedDay}>
+                  <SelectTrigger className="h-12 bg-black/45 border-white/10 rounded-2xl text-white/90 focus:ring-white/35">
+                    <SelectValue placeholder="Day" />
+                  </SelectTrigger>
+                  <SelectContent className="border-white/10 bg-[#080808]/95 backdrop-blur-xl rounded-2xl max-h-60 overflow-y-auto">
+                    {days.map((d) => (
+                      <SelectItem key={d} value={d} className="focus:bg-white/[0.08] focus:text-white rounded-lg">
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="mt-1.5 text-[11px] text-muted-foreground/60 pl-1">
+                {selectedYear && selectedMonth && selectedDay ? (
+                  <span className="text-white/70">
+                    Selected: {format(new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, parseInt(selectedDay)), "PPPP")}
+                  </span>
+                ) : (
+                  <span>Defaults to current time if left incomplete or empty</span>
                 )}
               </div>
             </section>
